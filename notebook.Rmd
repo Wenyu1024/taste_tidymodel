@@ -114,16 +114,49 @@ iris_probs <- iris_ranger %>%
   bind_cols(iris_testing)
 glimpse(iris_probs)
 
-iris_probs <- iris_ranger %>%
-  predict(iris_testing, type = "prob") %>%
-  bind_cols(iris_testing)
-glimpse(iris_probs)
 ```
 
+Now that everything is in one tibble, it is easy to calculate curve methods.
+In this case we are using gain_curve()??
 ```{r}
 iris_probs%>%
   gain_curve(Species, .pred_setosa:.pred_virginica) %>%
   glimpse()
+
+# The curve methods include an autoplot() function that easily creates a ggplot2 visualization. 
+
+iris_probs%>%
+  gain_curve(Species, .pred_setosa:.pred_virginica) %>%
+  autoplot()
 ```
 
+
+
+```{r}
+iris_probs%>%
+  roc_curve(Species, .pred_setosa:.pred_virginica) %>%
+  autoplot()
+```
+
+## additional accuracy matrix
+I also need to know how the metrics function is working??
+```{r}
+
+iris_ranger %>%
+  predict(iris_testing) %>%
+  bind_cols(iris_testing) %>%
+  metrics(truth = Species, estimate = .pred_class)
+
+iris_ranger %>% 
+  predict(iris_testing, type = "prob") %>%
+  bind_cols(predict(iris_ranger, iris_testing)) %>%
+  bind_cols(select(iris_testing, Species)) %>%
+  glimpse()
+
+iris_ranger %>% 
+  predict(iris_testing, type = "prob") %>%
+  bind_cols(predict(iris_ranger, iris_testing)) %>%
+  bind_cols(select(iris_testing, Species)) %>%
+  metrics(Species, .pred_setosa:.pred_virginica, estimate = .pred_class)
+```
 
