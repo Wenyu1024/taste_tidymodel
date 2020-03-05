@@ -52,12 +52,15 @@ dim(dia_test)
 ```
 
 Furthermore, the training data set will be prepared for 3-fold cross-validation (using three here to speed things up). All this is accomplished using the rsample package
+
+exectute the training and testing using analysis and assessment on the specific dataset (fold),
+and then use purrr::map to apply this process to all the folds
 ```{r}
 dia_vfold <- vfold_cv(dia_train, v = 3, repeats = 1, strata = price)
 dia_vfold %>% glimpse()
 dia_vfold %>% 
-  mutate(df_ana = map(splits, analysis),
-         df_ass = map(splits, assessment))
+  mutate(df_ana = map(splits, analysis), # training on each fold
+         df_ass = map(splits, assessment)) #test on each fold
 dia_vfold %>% glimpse()
 # glance(dia_vfold) Error: C stack usage  15922992 is too close to the limit
 ```
@@ -77,6 +80,8 @@ For example, the plot below indicates that there may be a nonlinear relationship
 #          subtitle = "The degree of the polynomial is a potential tuning parameter")
 ```
 The recipe() takes a formula and a data set, and then the different steps are added using the appropriate step_*() functions. The recipes package comes with a ton of useful step functions (see, e.g., vignette("Simple_Example", package = "recipes")).
+
+finally a prep() functions : For a recipe with at least one preprocessing operation, estimate the required parameters from a training set that can be later applied to other data sets.
 
 Herein, I want to log transform price (step_log()), 
 I want to center and scale all numeric predictors (step_normalize()), 
@@ -148,7 +153,7 @@ ggplot(lm_predicted, aes(.fitted, price)) +
     labs(title = "Actual vs. Predicted Price of Diamonds"
 ```
 
-# Evaluating Model Performance: yardstick::bake()
+# Evaluating Model Performance: yardstick (metrics, conf_mat)
 together with rsample::analysis, assessment and bake
 
 We already saw performance measures RMSE and R squared in the output of glance() above. The yardstick package is specifically designed for such measures for both numeric and categorical outcomes, and it plays well with multiple predictions.
@@ -306,7 +311,7 @@ rf_search <- tune_grid(rf_wflow,
                        resamples = dia_vfold,
                        param_info = rf_param)
 
-autoplot(rf_search, metric = "rmse") +
-    labs(title = "Results of Grid Search for Two Tuning Parameters of a Random Forest")
+# autoplot(rf_search, metric = "rmse") +
+    # labs(title = "Results of Grid Search for Two Tuning Parameters of a Random Forest")
 ```
 
